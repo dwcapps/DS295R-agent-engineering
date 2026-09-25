@@ -6,24 +6,36 @@ from langchain.agents import create_agent
 from langgraph.checkpoint.memory import InMemorySaver
 from google.genai import types
 from langchain_google_genai import ChatGoogleGenerativeAI
+from tools import TOOLS
 
 MODEL = "gemini-3.5-flash-lite"
-SYSTEM_PROMPT = \
-"""
+TEMP = None
+SEED = None
+SYSTEM_PROMPT = """
 You are a helpful assistant.
 """
 
 def get_response(prompt: str, agent, thread_config : dict) -> str:
-    response = agent.invoke(
+    return agent.invoke(
     {"messages": [{"role": "user", "content": prompt}]},
-    thread_config
+    config=thread_config
     )
-    return "Response: " + response["messages"][-1].text
 
 def get_model():
-    model = ChatGoogleGenerativeAI(model=MODEL) \
-        .bind(automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True))
-    return model
+    return ChatGoogleGenerativeAI(model=MODEL, temperature=TEMP, seed=SEED).bind(
+        automatic_function_calling=types.AutomaticFunctionCallingConfig(
+            disable=True
+        )
+    )
+
+def print_pretty_response(console : Console, response : dict):
+    pretty_response = "Response: " + response["messages"][-1].text
+    console.print(Markdown(pretty_response))
+
+def print_detailed_response(response : str):
+    for message in response["messages"]:
+        print(message)
+        print()
 
 def main():
     load_dotenv()
@@ -32,7 +44,7 @@ def main():
     
     agent = create_agent(
     model=get_model(),
-    tools=[],
+    tools=TOOLS,
     system_prompt=SYSTEM_PROMPT,
     checkpointer = InMemorySaver()
     )
@@ -40,11 +52,12 @@ def main():
     while True:
         try:
             prompt = input("Input: ")
-            if prompt == "exit": break
+            if prompt.strip().lower() == "exit": break
             response = get_response(prompt, agent, thread_config)
         except EOFError:
             break
-        console.print(Markdown(response))
+        print_pretty_response(console, response)
+        #print_detailed_response(response)
 
 if __name__ == "__main__":
     main()
