@@ -4,26 +4,36 @@ from rich.markdown import Markdown
 import uuid
 from langchain.agents import create_agent
 from langgraph.checkpoint.memory import InMemorySaver
+from google.genai import types
+from langchain_google_genai import ChatGoogleGenerativeAI
 
+MODEL = "gemini-3.5-flash-lite"
+SYSTEM_PROMPT = \
+"""
+You are a helpful assistant.
+"""
 
-load_dotenv()
-console = Console()
-thread_config = {"configurable": {"thread_id": str(uuid.uuid4())}}
-
-
-def get_response(prompt: str, agent) -> str:
+def get_response(prompt: str, agent, thread_config : dict) -> str:
     response = agent.invoke(
     {"messages": [{"role": "user", "content": prompt}]},
     thread_config
     )
-    return response["messages"][-1].text
+    return "Response: " + response["messages"][-1].text
+
+def get_model():
+    model = ChatGoogleGenerativeAI(model=MODEL) \
+        .bind(automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True))
+    return model
 
 def main():
+    load_dotenv()
+    console = Console()
+    thread_config = {"configurable": {"thread_id": str(uuid.uuid4())}}
     
     agent = create_agent(
-    model="google_genai:gemini-3.5-flash-lite",
+    model=get_model(),
     tools=[],
-    system_prompt="You are a helpful assistant",
+    system_prompt=SYSTEM_PROMPT,
     checkpointer = InMemorySaver()
     )
 
@@ -31,7 +41,7 @@ def main():
         try:
             prompt = input("Input: ")
             if prompt == "exit": break
-            response = get_response(prompt, agent)
+            response = get_response(prompt, agent, thread_config)
         except EOFError:
             break
         console.print(Markdown(response))
