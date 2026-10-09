@@ -2,6 +2,11 @@ import asyncio
 import uuid
 from typing import Any
 
+import logging
+logging.getLogger(
+    "langchain_google_genai._function_utils"
+).setLevel(logging.ERROR)
+
 from dotenv import load_dotenv
 from google.genai import types
 from langchain.agents import create_agent
@@ -11,7 +16,7 @@ from langgraph.checkpoint.memory import InMemorySaver
 from rich.console import Console
 from rich.markdown import Markdown
 
-from tools import TOOL_PACKAGE
+from ds295r_agent_engineering.tools import TOOL_PACKAGE
 
 
 # Configuration
@@ -150,5 +155,9 @@ async def main() -> None:
     )
 
 
-if __name__ == "__main__":
+def run():
     asyncio.run(main())
+
+
+if __name__ == "__main__":
+    run()

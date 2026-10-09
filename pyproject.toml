@@ -14,7 +14,7 @@ dependencies = [
 ]
 
 [project.scripts]
-agent = "ds295r_agent_engineering.main:main"
+agent = "ds295r_agent_engineering.main:run"
 
 [build-system]
 requires = ["uv_build>=0.12.18,<0.13.0"]
