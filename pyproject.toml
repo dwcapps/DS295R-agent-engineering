@@ -1,0 +1,21 @@
+[project]
+name = "ds295r-agent-engineering"
+version = "0.1.0"
+description = "My first langchain agent"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "langchain[mcp]>=1.4.2",
+    "langchain-google-genai>=4.4.0",
+    "langchain-google-vertexai>=3.2.4",
+    "python-dotenv>=1.2.3",
+    "rich>=15.0.0",
+    "fastmcp>=4.1.0",
+]
+
+[project.scripts]
+agent = "ds295r_agent_engineering.main:main"
+
+[build-system]
+requires = ["uv_build>=0.12.18,<0.13.0"]
+build-backend = "uv_build"

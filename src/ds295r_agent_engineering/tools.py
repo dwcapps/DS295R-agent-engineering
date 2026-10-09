@@ -18,7 +18,7 @@ def get_secret_passphrase() -> str:
 
 
 # dynamically add all @tool functions in this file to TOOLS list for easy exporting.
-TOOLS = [
+TOOL_PACKAGE = [
     obj
     for name, obj in globals().items()
     if isinstance(obj, BaseTool)
