@@ -1,11 +1,21 @@
 import asyncio
 import uuid
 from typing import Any
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
+MEMORY_FILE = PROJECT_ROOT / "data" / "memory.jsonl"
+MEMORY_FILE.parent.mkdir(parents=True, exist_ok=True)
 
 import logging
-logging.getLogger(
-    "langchain_google_genai._function_utils"
-).setLevel(logging.ERROR)
+logging.getLogger("google_genai").setLevel(logging.ERROR)
+logging.getLogger("langchain_google_genai._function_utils").setLevel(logging.ERROR)
+logging.disable(logging.WARNING)
+
+import warnings
+from langchain_core._api import LangChainBetaWarning
+warnings.filterwarnings("ignore", category=LangChainBetaWarning)
 
 from dotenv import load_dotenv
 from google.genai import types
@@ -25,14 +35,37 @@ TEMPERATURE = None
 SEED = None
 ENABLE_CHECKPOINTING = True
 
-SYSTEM_PROMPT = (
-    "You are a helpful LangChain tutor. "
-    "Use the documentation tools when answering questions about LangChain."
-)
+
+SYSTEM_PROMPT =  """
+You are a multipurpose AI agent.
+
+Use the LangChain documentation tools when answering questions about LangChain.
+
+You also have access to persistent memory tools.
+
+Memory guidelines:
+- Search your memory for relevant information before answering personalized questions.
+- Save stable facts, preferences, goals, and important project details when appropriate.
+- Do not save every ordinary conversational detail.
+- Do not save sensitive personal information unless the user explicitly asks you to remember it.
+- When the user explicitly says "remember this," save the information using the memory tools.
+- Never claim to have saved something unless the memory tool succeeds.
+"""
 
 MCP_CONFIG = {
     "langchain-docs": {
         "url": "https://docs.langchain.com/mcp"
+    },
+
+    "memory": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ],
+      "env": {
+        "MEMORY_FILE_PATH": str(MEMORY_FILE)
+      }
     }
 }
 
@@ -44,7 +77,6 @@ def create_model() -> ChatGoogleGenerativeAI:
         temperature=TEMPERATURE,
         seed=SEED,
     )
-
     # Disable Google's automatic function calling because
     # LangChain is managing tool calls itself.
     return model.bind(
@@ -109,19 +141,15 @@ async def chat_loop(
         except (EOFError, KeyboardInterrupt):
             print()
             break
-
         if prompt.strip().lower() == "exit":
             break
-
         if not prompt.strip():
             continue
-
         response = await get_response(
             prompt,
             agent,
             thread_config,
         )
-
         print_response(console, response)
         # print_detailed_response(response)
 
@@ -134,6 +162,10 @@ async def main() -> None:
 
     adapter = MCPAdapter(MCP_CONFIG)
     mcp_tools = await adapter.list_tools()
+
+    print("Loaded MCP tools:")
+    for tool in mcp_tools:
+        print(f"  - {tool.name}")
 
     all_tools = TOOL_PACKAGE + mcp_tools
 
