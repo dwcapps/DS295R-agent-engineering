@@ -27,6 +27,7 @@ from rich.console import Console
 from rich.markdown import Markdown
 
 from ds295r_agent_engineering.tools import TOOL_PACKAGE
+from ds295r_agent_engineering.shopping_agent import talk_to_shopping_agent
 
 
 # Configuration
@@ -42,6 +43,8 @@ You are a multipurpose AI agent.
 Use the LangChain documentation tools when answering questions about LangChain.
 
 You also have access to persistent memory tools.
+
+You can communicate with a Shopping subagent to help the user find good deals.
 
 Memory guidelines:
 - Search your memory for relevant information before answering personalized questions.
